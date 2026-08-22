@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "packageName": "@paperclipai/skills-catalog",
   "packageVersion": "0.3.1",
-  "generatedAt": "2026-08-07T20:30:29.973Z",
+  "generatedAt": "2026-08-22T07:08:07.200Z",
   "skills": [
     {
       "id": "paperclipai:bundled:docs:doc-maintenance",
@@ -1113,6 +1113,48 @@
         "path": "skills/last30days",
         "url": "https://github.com/mvanhorn/last30days-skill/tree/v3.3.0/skills/last30days"
       }
+    },
+    {
+      "id": "paperclipai:optional:research:seo-analysis",
+      "key": "paperclipai/optional/research/seo-analysis",
+      "kind": "optional",
+      "category": "research",
+      "slug": "seo-analysis",
+      "name": "seo-analysis",
+      "description": "Perform technical SEO audits and optimization recommendations for websites — analyze on-page factors, content quality, meta tags, internal linking, page speed, and generate actionable improvement reports.",
+      "path": "catalog/optional/research/seo-analysis",
+      "entrypoint": "SKILL.md",
+      "trustLevel": "markdown_only",
+      "compatibility": "compatible",
+      "defaultInstall": false,
+      "recommendedForRoles": [
+        "writer",
+        "product",
+        "engineer"
+      ],
+      "requires": [],
+      "tags": [
+        "seo",
+        "optimization",
+        "analysis",
+        "web",
+        "content"
+      ],
+      "files": [
+        {
+          "path": "SKILL.md",
+          "kind": "skill",
+          "sizeBytes": 5253,
+          "sha256": "8d9cb0f2842dbc09702b15074570c79b63f348bd5d0354e1f9bc53dba2f9fe2c"
+        },
+        {
+          "path": "examples/seo-audit-example.md",
+          "kind": "markdown",
+          "sizeBytes": 5087,
+          "sha256": "7755d84dc9c85e9a9aadfde290821454d196673a46fb71a5c84b403a74d819a1"
+        }
+      ],
+      "contentHash": "sha256:7204476d7ecd57c2b631e4436631e5e64b78c97d41b22206d687620fa2f27f02"
     },
     {
       "id": "paperclipai:optional:software-development:prepare-mcp-integration",

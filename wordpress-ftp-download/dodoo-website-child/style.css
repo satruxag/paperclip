@@ -58,8 +58,16 @@ Text Domain: dodoo-website-child
 	--accent-hover: var(--dw-color-accent-dark);
 	--accent-light: #D9F5F0;
 	--accent-text: var(--dw-color-primary); /* il ciano è chiaro: testo scuro per contrasto (coerente con .dw-btn-primary) */
+	--accent-ink: #006658;   /* testo accent su superfici chiare (ROS-521) */
+	--accent-ink-hover: #004F44;
 	--bg-header: var(--dw-color-primary);
 }
+
+@media (prefers-color-scheme: dark) {
+	:root { --accent-ink: #00C2A8; --accent-ink-hover: #5EEBD8; }
+}
+
+.dw-dark { --accent-ink: #00C2A8; --accent-ink-hover: #5EEBD8; }
 
 /* Il critical-css inline del parent (seo.php) hardcoda background:#fff sul
    .site-header ignorando --bg-header. Il child stylesheet arriva dopo nel
@@ -945,7 +953,7 @@ pre::-webkit-scrollbar-thumb {
 	display: flex;
 	align-items: center;
 	gap: 0.3rem;
-	color: var(--dw-color-accent-dark);
+	color: var(--accent-ink);
 	font-size: 0.8rem;
 	font-weight: 600;
 	text-transform: uppercase;
@@ -1359,7 +1367,7 @@ main.site-content {
 	color: #ffffff !important;
 }
 .dw-dark .aeb-link {
-	color: var(--dw-color-accent) !important;
+	color: var(--accent-ink) !important;
 }
 .dw-dark .aeb-link:hover {
 	color: var(--dw-color-accent-dark) !important;
@@ -1434,6 +1442,35 @@ main.site-content {
 }
 .dw-dark .spalla-bar > * + *::before {
 	color: var(--text-muted);
+}
+
+/* Section title — usato come titolo principale in varie sezioni */
+.dw-dark .section-title {
+	color: var(--text-header);
+}
+
+/* Category grid card — card delle categorie nella homepage */
+.dw-dark .category-grid-card {
+	background: var(--bg-card) !important;
+	color: var(--text-header) !important;
+}
+
+/* Breadcrumb links — percorsi di navigazione */
+.dw-dark .breadcrumb-item a {
+	color: var(--text-secondary);
+}
+
+/* Meta reading time — tempo di lettura negli articoli */
+.dw-dark .meta-reading {
+	color: var(--text-secondary);
+}
+.dw-dark .meta-reading span {
+	color: var(--text-muted);
+}
+
+/* Publish date — data di pubblicazione */
+.dw-dark .publish-date {
+	color: var(--text-secondary);
 }
 
 /* ==========================================================================

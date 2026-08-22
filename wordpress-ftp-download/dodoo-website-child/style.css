@@ -96,6 +96,43 @@ Text Domain: dodoo-website-child
 	-webkit-backdrop-filter: blur(12px);
 }
 
+/* ==========================================================================
+   ROS-521/523 — Token di contrasto --accent-ink applicato ai 9 selettori
+   (light+dark). Testo "accent su superfici chiare": light=#006658,
+   dark/#00C2A8. Non toccare --accent (decorativo) ne' --accent-text
+   (testo SU sfondo accent).
+   ========================================================================== */
+.ne-tag,
+.lead-cta,
+.aeb-link,
+.section-header-link,
+.category-badge,
+.article-content a,
+.entry-content a,
+.nav-direction,
+.cat-card-read,
+.about-section-kicker,
+.cat-sub-link,
+.hero-eyebrow,
+.cf-req,
+.comments-section .comment-reply-link {
+	color: var(--accent-ink);
+}
+
+/* Hover state per elementi interattivi */
+.lead-cta:hover,
+.aeb-link:hover,
+.section-header-link:hover,
+.article-content a:hover,
+.entry-content a:hover,
+.cat-card-read:hover,
+.cat-sub-link:hover,
+.hero-eyebrow:hover,
+.cf-req:hover,
+.comments-section .comment-reply-link:hover {
+	color: var(--accent-ink-hover);
+}
+
 /* ROS-66: con molte categorie (10 voci: Home + 8 categorie + Chi Sono) la
    nav-list compressa dal parent (1280-1799px, style.src.css ~3936) resta
    comunque "white-space: nowrap" e senza flex-wrap/overflow: le voci finali
@@ -1372,6 +1409,14 @@ main.site-content {
 .dw-dark .aeb-link:hover {
 	color: var(--dw-color-accent-dark) !important;
 }
+
+/* ROS-523/A: parent forza .ne-tag e .section-header-link a #60A5FA (blu)
+   con !important in dark mode. Allineiamoli a --accent-ink dark per
+   coerenza di brand e contrasto migliorato (7,02 -> 7,89:1). */
+.dw-dark .ne-tag,
+.dw-dark .section-header-link {
+	color: var(--accent-ink) !important;
+}
 .dw-dark .editorial-meta-zone .category-grid-card {
 	background: rgba(255, 255, 255, 0.07) !important;
 	border-color: rgba(255, 255, 255, 0.12) !important;
@@ -1471,6 +1516,11 @@ main.site-content {
 /* Publish date — data di pubblicazione */
 .dw-dark .publish-date {
 	color: var(--text-secondary);
+}
+
+/* Site header — override per dark mode (il parent ha background:#fff hardcoded) */
+.dw-dark .site-header {
+	background: var(--bg-header) !important;
 }
 
 /* ==========================================================================

@@ -1,0 +1,1482 @@
+/*
+Theme Name: Dodoo Website Child
+Theme URI: https://dodoo.it
+Description: Child theme di dodoo-website (Divi) per il restyle personal brand di Rosario Giordano.
+Author: Rosario Giordano
+Author URI: https://dodoo.it
+Template: dodoo-website
+Version: 0.2.1
+Text Domain: dodoo-website-child
+*/
+
+/* ==========================================================================
+   1. Design tokens — palette, tipografia, spaziature (brief ROS-22, step 1)
+   ========================================================================== */
+:root {
+	/* Palette */
+	--dw-color-primary: #0B2540;      /* blu petrolio / navy scuro */
+	--dw-color-primary-light: #16385C;
+	--dw-color-accent: #00C2A8;       /* verde-ciano tecnico */
+	--dw-color-accent-dark: #009984;
+	--dw-color-text: #1A1D21;         /* grigio quasi-nero */
+	--dw-color-bg-secondary: #F4F6F8; /* grigio chiaro */
+	--dw-color-bg: #FFFFFF;
+	--dw-color-border: #E2E6EA;
+	--dw-color-success: #0F9D58;
+	--dw-color-warning: #B25E00;
+	--dw-color-glow: rgba(0, 194, 168, 0.14);
+
+	/* Tipografia */
+	--dw-font-sans: "Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, sans-serif;
+	--dw-font-mono: "JetBrains Mono", "Fira Code", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+	/* Scala spaziature 8px (ROS-33 §3) */
+	--dw-space-1: 4px;
+	--dw-space-2: 8px;
+	--dw-space-3: 16px;
+	--dw-space-4: 24px;
+	--dw-space-5: 32px;
+	--dw-space-6: 48px;
+	--dw-space-7: 64px;
+	--dw-space-8: 96px;
+
+	/* Spaziature / raggio */
+	--dw-radius: 6px;
+	--dw-container-max: 1200px;
+	--dw-transition: 220ms ease;
+}
+
+/* ==========================================================================
+   1b. Coerenza brand header/nav (tema padre) — il parent usa un accent blu
+   (--accent, --accent-hover, --accent-light) su header, nav e bottoni,
+   mentre le sezioni del child (hero, CTA, articoli) usano il verde-ciano
+   del brand. Riallineiamo le custom property del parent al ciano del brief
+   così l'intero sito (header incluso) usa un solo colore di accento.
+   ========================================================================== */
+:root {
+	--accent: var(--dw-color-accent);
+	--accent-hover: var(--dw-color-accent-dark);
+	--accent-light: #D9F5F0;
+	--accent-text: var(--dw-color-primary); /* il ciano è chiaro: testo scuro per contrasto (coerente con .dw-btn-primary) */
+	--bg-header: var(--dw-color-primary);
+}
+
+/* Il critical-css inline del parent (seo.php) hardcoda background:#fff sul
+   .site-header ignorando --bg-header. Il child stylesheet arriva dopo nel
+   cascade (link tag line 177 vs style tag line 22) quindi questa regola vince
+   e impone il navy del brand senza bisogno di !important. */
+.site-header {
+	background: var(--dw-color-primary);
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+.site-header .site-title a,
+.site-header .nav-list li a,
+.site-header .nav-list li a:hover,
+.site-header .btn-icon,
+.site-header .site-description {
+	color: #FFFFFF;
+}
+.site-header .site-title .logo-dot {
+	color: var(--dw-color-accent);
+}
+.site-header .nav-list li a:hover {
+	color: var(--dw-color-accent);
+}
+.site-header.scrolled {
+	background: rgba(11, 37, 64, 0.92);
+	backdrop-filter: blur(12px);
+	-webkit-backdrop-filter: blur(12px);
+}
+
+/* ROS-66: con molte categorie (10 voci: Home + 8 categorie + Chi Sono) la
+   nav-list compressa dal parent (1280-1799px, style.src.css ~3936) resta
+   comunque "white-space: nowrap" e senza flex-wrap/overflow: le voci finali
+   collidono con lingua/ricerca/toggle in .header-actions. Fix robusto e
+   a prova di crescita futura del numero di categorie: la nav-list scorre
+   in orizzontale invece di sovrapporsi, con scrollbar nascosta per non
+   rompere il layout dell'header. */
+@media (min-width: 1280px) and (max-width: 1799px) {
+	.main-nav {
+		overflow: hidden;
+	}
+	.nav-list {
+		flex-wrap: nowrap;
+		overflow-x: auto;
+		scrollbar-width: none;
+		-ms-overflow-style: none;
+		-webkit-overflow-scrolling: touch;
+	}
+	.nav-list::-webkit-scrollbar {
+		display: none;
+	}
+	.nav-list li {
+		flex-shrink: 0;
+	}
+}
+
+/* .search-submit e .hero-category/.hero-cta nel parent forzano "color:#fff"
+   inline (non var(--accent-text)) su sfondo accent: con il ciano chiaro il
+   contrasto è insufficiente, per cui li correggiamo esplicitamente. */
+.search-submit,
+.hero-category,
+.hero-cta,
+.current {
+	color: var(--dw-color-primary);
+}
+
+/* Dark mode (opzionale — attivata da classe .dw-dark su <html>/<body>, step 7 del brief) */
+.dw-dark {
+	--dw-color-primary: #0B2540;
+	--dw-color-text: #E8ECEF;
+	--dw-color-bg-secondary: #101826;
+	--dw-color-bg: #0B121C;
+	--dw-color-border: #22304A;
+	--dw-color-glow: rgba(0, 194, 168, 0.22);
+	/* ROS-66: --dw-color-primary-light (blu navy, pensato per testo secondario
+	   su sfondo chiaro) non era mai ridefinita qui: meta articolo, ruoli,
+	   sottotitoli restavano blu scuro su sfondo scuro. Non è mai usata come
+	   background, quindi è sicuro ridefinirla qui una sola volta invece di
+	   creare un override per ciascuno dei suoi ~12 selettori. */
+	--dw-color-primary-light: #94A3B8;
+
+	/* Il tema padre (style.css) usa un proprio namespace di custom property
+	   (--text-*, --bg-*) mai toccato da .dw-dark: componenti del parent come
+	   .lead-title, .spalla-item, .story-card leggono var(--text-primary) ecc.
+	   e restavano scuri su sfondo scuro. Ridefiniamo qui lo stesso namespace. */
+	--bg-page: var(--dw-color-bg);
+	--bg-card: var(--dw-color-bg-secondary);
+	--bg-header: var(--dw-color-primary);
+	--bg-code: #0B121C;
+	--bg-code-inline: #1A2332;
+	--text-primary: var(--dw-color-text);
+	--text-body: #C5CCD4;
+	--text-secondary: #94A3B8;
+	--text-muted: #64748B;
+	--text-header: #F1F5F9;
+	--border: var(--dw-color-border);
+}
+
+/* ROS-61: fix dark mode illeggibile su articoli. Il tema padre (assets/css/
+   style.css, blocco "V9 — Separazione cromatica") impone
+   body{background:#e7ebf1 !important} e .site-content > .container{background:#fff}
+   senza contropartita dark: la card contenuto (single-post, testo, tabelle,
+   box autore) restava bianca/illeggibile e la pagina restava grigio chiaro
+   anche con .dw-dark attivo, perché il body{background-color:var(--dw-color-bg)}
+   sotto (riga ~130) non ha !important e perde sempre contro la regola del
+   parent. .dw-dark body ha specificità maggiore di body (0,1,1 vs 0,0,1):
+   con !important vince la specificità, quindi batte il parent a prescindere
+   dall'ordine di caricamento dei fogli di stile. */
+.dw-dark body {
+	background-color: var(--dw-color-bg) !important;
+}
+
+.dw-dark .site-content > .container {
+	background-color: var(--bg-card);
+}
+
+/* ROS-66: fix dark mode illeggibile — var(--dw-color-primary) è blu navy,
+   pensato come testo su sfondo chiaro/accent (bottoni, badge, stato "current").
+   Su questi selettori invece siede su sfondo pagina/card scuro (--dw-color-bg /
+   --dw-color-bg-secondary), risultando blu-su-blu illeggibile. Override mirato
+   invece di ridefinire --dw-color-primary stessa, perché quella resta
+   correttamente in uso come testo-su-accent in .dw-btn-primary, .category-badge,
+   .current, #commentform #submit, ecc. */
+.dw-dark h1,
+.dw-dark h2,
+.dw-dark h3,
+.dw-dark h4,
+.dw-dark h5,
+.dw-dark h6,
+.dw-dark .et_pb_module h1,
+.dw-dark .et_pb_module h2,
+.dw-dark .et_pb_module h3,
+.dw-dark .dw-services-cta-card h3,
+.dw-dark .article-title,
+.dw-dark .meta-author .author-name a,
+.dw-dark .share-btn,
+.dw-dark .author-box .author-name a,
+.dw-dark .story-title a,
+.dw-dark .comments-title,
+.dw-dark .comment-list .comment-author .fn,
+.dw-dark #respond .comment-reply-title,
+.dw-dark .dw-chi-sono-name,
+.dw-dark .dw-chi-sono-skills h2,
+.dw-dark .dw-chi-sono-cta h2,
+.dw-dark .dw-cat-dropdown-name {
+	color: var(--text-header);
+}
+
+/* ==========================================================================
+   2. Base — override leggeri sopra Divi, non invasivi
+   ========================================================================== */
+body {
+	color: var(--dw-color-text);
+	background-color: var(--dw-color-bg);
+	font-family: var(--dw-font-sans);
+}
+
+h1, h2, h3, h4, h5, h6,
+.et_pb_module h1, .et_pb_module h2, .et_pb_module h3 {
+	font-family: var(--dw-font-sans);
+	color: var(--text-header);
+}
+
+a {
+	color: var(--dw-color-accent);
+}
+a:hover {
+	color: var(--dw-color-accent-dark);
+}
+
+/* Bottoni / CTA in stile Divi (.et_pb_button) */
+.et_pb_button,
+.et_pb_button:before {
+	background-color: var(--dw-color-accent);
+	border-color: var(--dw-color-accent);
+	color: var(--dw-color-primary);
+	border-radius: var(--dw-radius);
+}
+.et_pb_button:hover {
+	background-color: var(--dw-color-accent-dark);
+	border-color: var(--dw-color-accent-dark);
+}
+.et_pb_button:focus-visible,
+.dw-btn:focus-visible {
+	outline: 2px solid var(--dw-color-accent);
+	outline-offset: 2px;
+}
+
+/* Blocchi codice — leggibilità + syntax highlighting (step 3 del brief)
+   Trattamento "terminal" ispirato a fasterthanli.me. Pallini semaforo in
+   colori realistici (rosso/giallo/verde) per rendere l'elemento più
+   riconoscibile/decorativo, come da guida di stile ROS-33 §4. */
+code, kbd, samp {
+	font-family: var(--dw-font-mono);
+	font-size: 0.9em;
+	background-color: var(--dw-color-bg-secondary);
+	border: 1px solid var(--dw-color-border);
+	border-radius: 4px;
+	padding: 0.1em 0.35em;
+}
+pre code, .wp-block-code code {
+	background: none;
+	border: none;
+	padding: 0;
+}
+pre, .wp-block-code {
+	font-family: var(--dw-font-mono);
+	font-size: 0.85em;
+	line-height: 1.65;
+	color: #E6EDF3;
+	background-color: var(--dw-color-primary);
+	border: 1px solid var(--dw-color-primary-light);
+	border-radius: var(--dw-radius);
+	padding: 2.25rem 1.25rem 1.25rem;
+	margin: 1.5rem 0;
+	overflow-x: auto;
+	position: relative;
+}
+/* Barra "titolo finestra" in alto, riferimento ai blocchi codice di fasterthanli.me */
+pre::before, .wp-block-code::before {
+	content: "";
+	position: absolute;
+	top: 0.85rem;
+	left: 1.25rem;
+	width: 0.6rem;
+	height: 0.6rem;
+	border-radius: 50%;
+	background-color: #FF5F56;
+	box-shadow: 1.1rem 0 0 #FFBD2E, 2.2rem 0 0 #27C93F;
+}
+pre::-webkit-scrollbar {
+	height: 8px;
+}
+pre::-webkit-scrollbar-thumb {
+	background-color: var(--dw-color-accent);
+	border-radius: 4px;
+}
+
+/* ==========================================================================
+   3. Card categorie (step 4 del brief)
+   ========================================================================== */
+.dw-category-card {
+	background-color: var(--dw-color-bg);
+	border: 1px solid var(--dw-color-border);
+	border-radius: var(--dw-radius);
+	padding: 1.5rem;
+	transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+.dw-category-card:hover {
+	box-shadow: 0 4px 16px rgba(11, 37, 64, 0.12), 0 0 0 3px var(--dw-color-glow);
+	border-color: var(--dw-color-accent);
+	transform: translateY(-2px);
+}
+
+/* ==========================================================================
+   4. Hero + sezione autore homepage (step 2 del brief)
+   ========================================================================== */
+.dw-hero {
+	background-color: var(--dw-color-primary);
+	color: #FFFFFF;
+	padding: 3rem 1.5rem;
+	text-align: center;
+}
+.dw-hero-inner {
+	max-width: var(--dw-container-max);
+	margin: 0 auto;
+}
+.dw-hero-avatar {
+	border-radius: 50%;
+	border: 3px solid var(--dw-color-accent);
+	margin-bottom: 1.25rem;
+}
+.dw-hero-headline {
+	color: #FFFFFF;
+	font-size: 1.75rem;
+	margin: 0 0 0.75rem;
+}
+.dw-hero-subheadline {
+	color: #C9D3DC;
+	font-size: 1.05rem;
+	max-width: 640px;
+	margin: 0 auto 1.75rem;
+	line-height: 1.6;
+}
+.dw-hero-cta {
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 1rem;
+}
+.dw-btn {
+	display: inline-block;
+	padding: 0.75rem 1.5rem;
+	border-radius: var(--dw-radius);
+	font-weight: 600;
+	text-decoration: none;
+	transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.dw-btn:hover {
+	opacity: 0.9;
+	transform: translateY(-1px);
+}
+.dw-btn-primary {
+	background-color: var(--dw-color-accent);
+	color: var(--dw-color-primary);
+}
+.dw-btn-secondary {
+	background-color: transparent;
+	color: #FFFFFF;
+	border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.dw-author-highlight {
+	background-color: var(--dw-color-bg-secondary);
+	padding: 2.5rem 1.5rem;
+}
+.dw-author-highlight-inner {
+	max-width: var(--dw-container-max);
+	margin: 0 auto;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 1.5rem;
+	text-align: center;
+}
+.dw-author-highlight-avatar {
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+.dw-author-highlight-body h2 {
+	margin-top: 0;
+	margin-bottom: 0.35rem;
+}
+.dw-author-highlight-role {
+	color: var(--dw-color-accent-dark);
+	font-weight: 600;
+	margin-top: 0;
+}
+.dw-author-highlight-skills {
+	list-style: none;
+	display: flex;
+	flex-wrap: wrap;
+	justify-content: center;
+	gap: 0.5rem;
+	padding: 0;
+	margin: 1rem 0;
+}
+.dw-author-highlight-skills li {
+	background-color: var(--dw-color-bg);
+	border: 1px solid var(--dw-color-border);
+	border-radius: 999px;
+	padding: 0.3rem 0.9rem;
+	font-size: 0.85rem;
+	font-family: var(--dw-font-mono);
+}
+.dw-author-highlight-links a {
+	font-weight: 600;
+}
+
+@media (min-width: 768px) {
+	.dw-hero {
+		padding: 5rem 2rem;
+	}
+	.dw-hero-headline {
+		font-size: 2.5rem;
+	}
+	.dw-author-highlight-inner {
+		flex-direction: row;
+		text-align: left;
+		align-items: flex-start;
+	}
+	.dw-author-highlight-skills,
+	.dw-author-highlight-links {
+		justify-content: flex-start;
+	}
+}
+
+/* ==========================================================================
+   4b. Sezione CTA servizi homepage (step 6 del brief)
+   ========================================================================== */
+.dw-services-cta {
+	background-color: var(--dw-color-bg);
+	padding: 3rem 1.5rem;
+	text-align: center;
+	border-top: 1px solid var(--dw-color-border);
+}
+.dw-services-cta-inner {
+	max-width: var(--dw-container-max);
+	margin: 0 auto;
+}
+.dw-services-cta-inner h2 {
+	margin-top: 0;
+	margin-bottom: 0.75rem;
+}
+.dw-services-cta-intro {
+	color: var(--dw-color-text);
+	max-width: 640px;
+	margin: 0 auto 2rem;
+	line-height: 1.6;
+}
+.dw-services-cta-grid {
+	display: grid;
+	grid-template-columns: 1fr;
+	gap: 1.25rem;
+	margin-bottom: 2rem;
+	text-align: left;
+}
+.dw-services-cta-card {
+	background-color: var(--dw-color-bg-secondary);
+	border: 1px solid var(--dw-color-border);
+	border-radius: var(--dw-radius);
+	padding: 1.5rem;
+}
+.dw-services-cta-card h3 {
+	margin-top: 0;
+	margin-bottom: 0.5rem;
+	color: var(--dw-color-primary);
+}
+.dw-services-cta-card p {
+	margin: 0;
+	color: var(--dw-color-text);
+}
+
+/* ROS-33 §4.4: icona outline sopra l'H3 + hover-glow premium sulle card.
+   Transitare box-shadow verso --dw-color-glow e il bordo ad accent (40% su
+   hover/focus), come da mockup (card-icon, .dw-services-cta-card:hover). */
+.dw-services-cta-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 44px;
+	height: 44px;
+	margin-bottom: 1rem;
+	border-radius: var(--dw-radius);
+	background-color: var(--dw-color-primary);
+	color: var(--dw-color-accent);
+	flex-shrink: 0;
+}
+.dw-services-cta-card {
+	transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+}
+.dw-services-cta-card:hover,
+.dw-services-cta-card:focus-visible {
+	box-shadow: 0 8px 32px var(--dw-color-glow);
+	border-color: rgba(0, 194, 168, 0.4);
+	transform: translateY(-2px);
+}
+.dw-services-cta-card:focus-visible {
+	outline: 2px solid var(--dw-color-accent);
+	outline-offset: 2px;
+}
+
+@media (min-width: 768px) {
+	.dw-services-cta-grid {
+		grid-template-columns: repeat(3, 1fr);
+	}
+}
+
+/* ==========================================================================
+   5. Template articolo single.php (step 3 del brief)
+   Markup nativo del tema padre (breadcrumbs, article-header/meta, author-box,
+   sharing, related, pagination): qui solo branding sulle classi reali, nessun
+   hook PHP necessario perché il loop principale già renderizza tutto.
+   ========================================================================== */
+.breadcrumbs {
+	max-width: var(--dw-container-max);
+	margin: 1.5rem auto 0;
+	padding: 0 1.5rem;
+	font-size: 0.85rem;
+}
+.breadcrumb-list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.4rem;
+	list-style: none;
+	padding: 0;
+	margin: 0;
+	color: var(--dw-color-primary-light);
+}
+.breadcrumb-item:not(:last-child)::after {
+	content: "/";
+	margin-left: 0.4rem;
+	color: var(--dw-color-border);
+}
+.breadcrumb-item a {
+	color: var(--dw-color-primary-light);
+	text-decoration: none;
+}
+.breadcrumb-item a:hover {
+	color: var(--dw-color-accent-dark);
+}
+.breadcrumb-item.current {
+	color: var(--dw-color-text);
+	font-weight: 500;
+}
+
+.single-post-layout {
+	max-width: var(--dw-container-max);
+	margin: 0 auto;
+	padding: 1.5rem;
+	display: grid;
+	gap: 2.5rem;
+}
+
+/* Header articolo: badge categoria, titolo, meta autore/data/lettura */
+.article-categories {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+	margin-bottom: 1rem;
+}
+.category-badge {
+	display: inline-block;
+	background-color: var(--dw-color-accent);
+	color: var(--dw-color-primary);
+	font-family: var(--dw-font-mono);
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	padding: 0.3rem 0.8rem;
+	border-radius: 999px;
+	text-decoration: none;
+}
+.category-badge:hover {
+	background-color: var(--dw-color-accent-dark);
+	color: #FFFFFF;
+}
+
+.article-title {
+	font-size: 2rem;
+	line-height: 1.25;
+	margin: 0 0 1.25rem;
+	color: var(--dw-color-primary);
+}
+
+.article-meta {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 1.5rem;
+	padding-bottom: 1.5rem;
+	margin-bottom: 1.5rem;
+	border-bottom: 1px solid var(--dw-color-border);
+	color: var(--dw-color-primary-light);
+	font-size: 0.9rem;
+}
+.meta-item {
+	display: flex;
+	align-items: center;
+	gap: 0.6rem;
+}
+.meta-item.meta-author .author-info {
+	display: flex;
+	flex-direction: column;
+	line-height: 1.3;
+}
+.meta-item.meta-author img {
+	border-radius: 50%;
+}
+.meta-author .author-name a {
+	color: var(--dw-color-primary);
+	font-weight: 600;
+	text-decoration: none;
+}
+.meta-author .author-name a:hover {
+	color: var(--dw-color-accent-dark);
+}
+.meta-author .publish-date {
+	color: var(--dw-color-primary-light);
+	font-size: 0.85rem;
+}
+.meta-reading svg,
+.meta-comments svg {
+	color: var(--dw-color-accent-dark);
+}
+.meta-comments a {
+	color: var(--dw-color-primary-light);
+	text-decoration: none;
+}
+.meta-comments a:hover {
+	color: var(--dw-color-accent-dark);
+}
+
+.article-featured-image {
+	margin: 0 0 2rem;
+}
+.article-featured-image img {
+	width: 100%;
+	height: auto;
+	border-radius: var(--dw-radius);
+	display: block;
+}
+.article-featured-image figcaption {
+	margin-top: 0.6rem;
+	font-size: 0.85rem;
+	color: var(--dw-color-primary-light);
+	text-align: center;
+}
+
+/* Contenuto articolo */
+.article-content {
+	font-size: 1.05rem;
+	line-height: 1.75;
+}
+.article-content p {
+	margin: 0 0 1.25rem;
+}
+.article-content h2,
+.article-content h3,
+.article-content h4 {
+	margin: 2rem 0 1rem;
+}
+.article-content ul,
+.article-content ol {
+	padding-left: 1.4rem;
+	margin: 0 0 1.25rem;
+}
+.article-content blockquote {
+	border-left: 3px solid var(--dw-color-accent);
+	padding: 0.5rem 0 0.5rem 1.25rem;
+	margin: 1.5rem 0;
+	color: var(--dw-color-primary-light);
+	font-style: italic;
+}
+.article-content img {
+	max-width: 100%;
+	height: auto;
+	border-radius: var(--dw-radius);
+}
+.page-links {
+	margin-top: 2rem;
+	font-size: 0.9rem;
+}
+.page-links .page-link {
+	display: inline-block;
+	border: 1px solid var(--dw-color-border);
+	border-radius: var(--dw-radius);
+	padding: 0.2rem 0.6rem;
+	margin-right: 0.4rem;
+}
+
+/* Footer articolo: tag, condivisione, author box */
+.article-tags {
+	margin: 2rem 0 1.5rem;
+}
+.article-tags h4 {
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--dw-color-primary-light);
+	margin: 0 0 0.6rem;
+}
+.tag-list {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.5rem;
+}
+.tag-link {
+	background-color: var(--dw-color-bg-secondary);
+	border: 1px solid var(--dw-color-border);
+	border-radius: 999px;
+	padding: 0.3rem 0.8rem;
+	font-family: var(--dw-font-mono);
+	font-size: 0.8rem;
+	color: var(--dw-color-primary-light);
+	text-decoration: none;
+}
+.tag-link:hover {
+	border-color: var(--dw-color-accent);
+	color: var(--dw-color-accent-dark);
+}
+
+.article-sharing {
+	margin: 1.5rem 0;
+}
+.article-sharing h2 {
+	font-size: 1rem;
+	margin: 0 0 0.75rem;
+}
+.sharing-buttons {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.6rem;
+}
+.share-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.5rem 1rem;
+	border-radius: var(--dw-radius);
+	border: 1px solid var(--dw-color-border);
+	background-color: var(--dw-color-bg);
+	color: var(--dw-color-primary);
+	font-size: 0.85rem;
+	font-weight: 500;
+	text-decoration: none;
+	cursor: pointer;
+	transition: border-color 0.2s ease, color 0.2s ease;
+}
+.share-btn:hover {
+	border-color: var(--dw-color-accent);
+	color: var(--dw-color-accent-dark);
+}
+.share-btn.copied {
+	border-color: var(--dw-color-accent);
+	color: var(--dw-color-accent-dark);
+}
+
+.author-box {
+	display: flex;
+	gap: 1.25rem;
+	align-items: flex-start;
+	background-color: var(--dw-color-bg-secondary);
+	border-radius: var(--dw-radius);
+	padding: 1.5rem;
+	margin-top: 2rem;
+}
+.author-box .author-avatar img {
+	border-radius: 50%;
+	border: 2px solid var(--dw-color-accent);
+}
+.author-box .author-label {
+	display: block;
+	font-size: 0.8rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--dw-color-primary-light);
+}
+.author-box .author-name {
+	margin: 0.15rem 0 0.5rem;
+	font-size: 1.1rem;
+}
+.author-box .author-name a {
+	color: var(--dw-color-primary);
+	text-decoration: none;
+}
+.author-box .author-name a:hover {
+	color: var(--dw-color-accent-dark);
+}
+.author-box .author-bio {
+	margin: 0;
+	color: var(--dw-color-text);
+	line-height: 1.6;
+}
+
+/* Sidebar: indice dei contenuti + widget */
+/* ROS-66: la sidebar è position: sticky (v. media query sotto) ma non aveva un
+   proprio background-color. Durante lo scroll restava trasparente e si
+   sovrapponeva visivamente al contenuto sottostante (es. widget "Cerca nel
+   sito" / "Articoli recenti"). Background fisso sul contenitore, indipendente
+   da quello dei singoli widget interni. */
+.single-post-sidebar {
+	background-color: var(--dw-color-bg);
+}
+.single-post-sidebar .sidebar-widget {
+	background-color: var(--dw-color-bg-secondary);
+	border-radius: var(--dw-radius);
+	padding: 1.25rem;
+	margin-bottom: 1.5rem;
+}
+.single-post-sidebar .sidebar-widget h4 {
+	margin: 0 0 0.75rem;
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--dw-color-primary-light);
+}
+/* ROS-66: i widget nativi WP (register_sidebar 'before_widget' => class="widget"),
+   es. "Cerca nel sito" e "Articoli recenti", non hanno la classe custom
+   .sidebar-widget e quindi restavano senza styling/background propri. */
+.single-post-sidebar .widget {
+	background-color: var(--dw-color-bg-secondary);
+	border-radius: var(--dw-radius);
+	padding: 1.25rem;
+	margin-bottom: 1.5rem;
+}
+.single-post-sidebar .widget-title {
+	margin: 0 0 0.75rem;
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.03em;
+	color: var(--dw-color-primary-light);
+}
+.toc-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+}
+.toc-item a {
+	color: var(--dw-color-text);
+	text-decoration: none;
+	font-size: 0.9rem;
+}
+.toc-item a:hover {
+	color: var(--dw-color-accent-dark);
+}
+.toc-item.toc-h3 {
+	padding-left: 1rem;
+}
+
+/* Articoli correlati */
+.related-section {
+	margin-top: 2rem;
+}
+.related-section .section-title {
+	font-size: 1.4rem;
+	margin-bottom: 1.25rem;
+}
+.recent-stories {
+	display: grid;
+	gap: 1.5rem;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.story-card {
+	border: 1px solid var(--dw-color-border);
+	border-radius: var(--dw-radius);
+	overflow: hidden;
+}
+.story-thumbnail {
+	position: relative;
+}
+.story-thumbnail img {
+	width: 100%;
+	height: auto;
+	display: block;
+}
+.story-category {
+	position: absolute;
+	top: 0.6rem;
+	left: 0.6rem;
+}
+.story-category a {
+	background-color: var(--dw-color-accent);
+	color: var(--dw-color-primary);
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	padding: 0.2rem 0.6rem;
+	border-radius: 999px;
+	text-decoration: none;
+}
+.story-content {
+	padding: 1rem;
+}
+.story-meta time {
+	font-size: 0.8rem;
+	color: var(--dw-color-primary-light);
+}
+.story-title {
+	font-size: 1rem;
+	margin: 0.4rem 0 0;
+}
+.story-title a {
+	color: var(--dw-color-primary);
+	text-decoration: none;
+}
+.story-title a:hover {
+	color: var(--dw-color-accent-dark);
+}
+/* Navigazione articolo precedente/successivo */
+.post-navigation {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 1rem;
+	justify-content: space-between;
+	margin: 2.5rem auto 0;
+	padding: 1.5rem;
+	max-width: var(--dw-container-max);
+	border-top: 1px solid var(--dw-color-border);
+}
+.nav-link {
+	flex: 1 1 260px;
+	text-decoration: none;
+	color: var(--dw-color-text);
+}
+.nav-next {
+	text-align: right;
+}
+.nav-direction {
+	display: flex;
+	align-items: center;
+	gap: 0.3rem;
+	color: var(--dw-color-accent-dark);
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+}
+.nav-next .nav-direction {
+	justify-content: flex-end;
+}
+.nav-title {
+	display: block;
+	margin-top: 0.3rem;
+	font-weight: 600;
+}
+.nav-placeholder {
+	flex: 1 1 260px;
+}
+
+@media (min-width: 992px) {
+	.single-post-layout {
+		grid-template-columns: minmax(0, 1fr) 300px;
+		align-items: start;
+	}
+	.single-post-layout > article {
+		grid-column: 1;
+	}
+	.single-post-layout > aside {
+		grid-column: 2;
+		grid-row: 1;
+		position: sticky;
+		top: 1.5rem;
+	}
+}
+
+/* 6. Sezione commenti (step 3 del brief) — markup nativo comments.php del
+   parent (classi ereditate dal vecchio tema "Green Tech"): branding sulle
+   classi reali, nessun hook PHP necessario. */
+.comments-area {
+	max-width: var(--dw-container-max);
+	margin: 3rem auto 0;
+	padding-top: 2rem;
+	border-top: 1px solid var(--dw-color-border);
+}
+.comments-title {
+	font-family: var(--dw-font-sans);
+	color: var(--dw-color-primary);
+	font-size: 1.4rem;
+	margin-bottom: 1.5rem;
+}
+.comment-list {
+	list-style: none;
+	margin: 0 0 2rem;
+	padding: 0;
+}
+.comment-list .comment-body {
+	background: var(--dw-color-bg-secondary);
+	border: 1px solid var(--dw-color-border);
+	border-radius: var(--dw-radius);
+	padding: 1.25rem;
+	margin-bottom: 1rem;
+}
+.comment-list .comment-author .fn {
+	font-family: var(--dw-font-sans);
+	font-weight: 600;
+	color: var(--dw-color-primary);
+}
+.comment-list .comment-metadata a {
+	color: var(--dw-color-text);
+	opacity: 0.6;
+	font-size: 0.85rem;
+}
+.comment-list a {
+	color: var(--dw-color-accent-dark);
+}
+.no-comments {
+	color: var(--dw-color-text);
+	opacity: 0.7;
+}
+#respond .comment-reply-title {
+	font-family: var(--dw-font-sans);
+	color: var(--dw-color-primary);
+	font-size: 1.2rem;
+}
+.comment-form-field label {
+	font-family: var(--dw-font-sans);
+	font-size: 0.9rem;
+	color: var(--dw-color-text);
+	display: block;
+	margin-bottom: 0.25rem;
+}
+.comment-form-field input,
+.comment-form-field textarea,
+#commentform textarea {
+	width: 100%;
+	font-family: var(--dw-font-sans);
+	border: 1px solid var(--dw-color-border);
+	border-radius: var(--dw-radius);
+	padding: 0.6rem 0.75rem;
+	background: var(--dw-color-bg);
+	color: var(--dw-color-text);
+}
+.comment-form-field input:focus,
+#commentform textarea:focus {
+	outline: none;
+	border-color: var(--dw-color-accent);
+}
+#commentform .form-submit input[type="submit"],
+#commentform #submit {
+	font-family: var(--dw-font-sans);
+	font-weight: 600;
+	background: var(--dw-color-accent);
+	color: var(--dw-color-primary);
+	border: none;
+	border-radius: var(--dw-radius);
+	padding: 0.7rem 1.5rem;
+	cursor: pointer;
+}
+#commentform .form-submit input[type="submit"]:hover,
+#commentform #submit:hover {
+	background: var(--dw-color-accent-dark);
+	color: #fff;
+}
+
+/* Step 5: pagina Chi sono */
+.dw-chi-sono {
+	max-width: var(--dw-container-max);
+	margin: 0 auto;
+	padding: 2.5rem 1.25rem 4rem;
+	font-family: var(--dw-font-sans);
+	color: var(--dw-color-text);
+}
+.dw-chi-sono-header {
+	display: flex;
+	align-items: center;
+	gap: 1.5rem;
+	margin-bottom: 2rem;
+}
+.dw-chi-sono-avatar {
+	border-radius: 50%;
+	flex-shrink: 0;
+}
+.dw-chi-sono-name {
+	margin: 0 0 0.25rem;
+	font-size: 2rem;
+	color: var(--dw-color-primary);
+}
+.dw-chi-sono-role {
+	margin: 0;
+	color: var(--dw-color-accent-dark);
+	font-weight: 600;
+}
+.dw-chi-sono-bio p {
+	line-height: 1.7;
+	margin-bottom: 1rem;
+}
+.dw-chi-sono-skills {
+	background: var(--dw-color-bg-secondary);
+	border-radius: var(--dw-radius);
+	padding: 1.5rem;
+	margin: 2rem 0;
+}
+.dw-chi-sono-skills h2,
+.dw-chi-sono-cta h2 {
+	color: var(--dw-color-primary);
+	margin-top: 0;
+}
+.dw-chi-sono-skills-list {
+	list-style: none;
+	margin: 0;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+	gap: 0.75rem;
+}
+.dw-chi-sono-skills-list li {
+	background: var(--dw-color-bg);
+	border: 1px solid var(--dw-color-border);
+	border-radius: var(--dw-radius);
+	padding: 0.6rem 0.9rem;
+}
+.dw-chi-sono-cta {
+	text-align: center;
+	padding: 2rem 1rem;
+	border-top: 1px solid var(--dw-color-border);
+}
+/* ==========================================================================
+   7. Dark mode toggle (step 7 del brief, opzionale)
+   ========================================================================== */
+.dw-dark-toggle {
+	position: fixed;
+	bottom: 1.25rem;
+	right: 1.25rem;
+	z-index: 9999;
+	width: 44px;
+	height: 44px;
+	border-radius: 50%;
+	border: 1px solid var(--dw-color-border);
+	background: var(--dw-color-bg);
+	color: var(--dw-color-text);
+	font-size: 1.2rem;
+	line-height: 1;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+.dw-dark-toggle:hover {
+	border-color: var(--dw-color-accent);
+}
+
+@media (max-width: 600px) {
+	.dw-chi-sono-header {
+		flex-direction: column;
+		text-align: center;
+	}
+}
+
+/* ==========================================================================
+   8. Dropdown categorie di navigazione (step 4 del brief, inc/category-nav.php)
+   Markup iniettato via wp_body_open: nessuna regola del parent lo copre,
+   quindi va stilizzato da zero qui (bug: sezione mancante, corretto in ROS-32).
+   ========================================================================== */
+.dw-cat-nav {
+	position: fixed;
+	top: 88px;
+	right: 1.25rem;
+	z-index: 9990;
+	font-family: var(--dw-font-sans);
+}
+
+.dw-cat-nav-toggle {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.4rem;
+	padding: 0.55rem 1rem;
+	background: var(--dw-color-primary);
+	color: #fff;
+	border: 1px solid var(--dw-color-primary-light);
+	border-radius: var(--dw-radius);
+	font-family: inherit;
+	font-size: 0.9rem;
+	font-weight: 600;
+	line-height: 1.2;
+	cursor: pointer;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.dw-cat-nav-toggle:hover,
+.dw-cat-nav-toggle:focus-visible {
+	background: var(--dw-color-accent-dark);
+	border-color: var(--dw-color-accent);
+}
+
+.dw-cat-nav-toggle:focus-visible {
+	outline: 2px solid var(--dw-color-accent);
+	outline-offset: 2px;
+}
+
+.dw-cat-nav-caret {
+	display: inline-block;
+	font-size: 0.75rem;
+	transition: transform 0.2s ease;
+}
+
+.dw-cat-nav-toggle[aria-expanded="true"] .dw-cat-nav-caret {
+	transform: rotate(180deg);
+}
+
+.dw-cat-dropdown {
+	position: absolute;
+	top: calc(100% + 0.5rem);
+	right: 0;
+	width: min(90vw, 460px);
+	background: var(--dw-color-bg);
+	border: 1px solid var(--dw-color-border);
+	border-radius: var(--dw-radius);
+	box-shadow: 0 12px 32px rgba(0, 0, 0, 0.18);
+	padding: 0.75rem;
+}
+
+.dw-cat-dropdown[hidden] {
+	display: none;
+}
+
+.dw-cat-dropdown-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 0.5rem;
+}
+
+.dw-cat-dropdown-card {
+	display: flex;
+	flex-direction: column;
+	gap: 0.15rem;
+	padding: 0.65rem 0.75rem;
+	border: 1px solid var(--dw-color-border);
+	border-radius: var(--dw-radius);
+	background: var(--dw-color-bg-secondary);
+	color: var(--dw-color-text);
+	text-decoration: none;
+	transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.dw-cat-dropdown-card:hover,
+.dw-cat-dropdown-card:focus-visible {
+	border-color: var(--dw-color-accent);
+	transform: translateY(-1px);
+}
+
+.dw-cat-dropdown-name {
+	font-weight: 600;
+	font-size: 0.9rem;
+	color: var(--dw-color-primary);
+}
+
+.dw-cat-dropdown-count {
+	font-size: 0.78rem;
+	color: var(--dw-color-text);
+	opacity: 0.65;
+}
+
+.dw-dark .dw-cat-dropdown-name {
+	color: var(--dw-color-accent);
+}
+
+@media (max-width: 600px) {
+	.dw-cat-nav {
+		top: auto;
+		bottom: 5.25rem;
+		right: 1rem;
+	}
+
+	.dw-cat-dropdown {
+		width: min(88vw, 340px);
+	}
+
+	.dw-cat-dropdown-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* ==========================================================================
+   ROS-54: fix spaziature homepage (hero gap eccessivo + vuoto pre-footer)
+   Override mirato dei padding ereditati da main.site-content/.content-area/
+   .site-footer del tema padre (index.php > main#main.site-content >
+   div.content-area; footer.site-footer). .site-content > .container
+   (36px/44px, "V9 white-card") lasciato intatto: e' design, non spaziatura
+   di layout, e collegato al restyling ROS-33/ROS-37 in corso in parallelo.
+   Bug A: 0(main) + 36(container) + 0(content-area) = 36px (target 30-40).
+   Bug B: 0(content-area) + 0(main) + 44(container) + 12(footer) = 56px
+   (target 40-60).
+   ========================================================================== */
+main.site-content {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+.content-area {
+	padding-top: 0;
+	padding-bottom: 0;
+}
+
+.site-footer {
+	margin-top: 12px;
+}
+
+/* ============================================================
+   ROS-70 — Dark mode overrides for hero & spalla-title
+   ============================================================ */
+/* Hero navy (#0B2540) is invariant in dark mode by design (ROS-67 §1.2). */
+/* Only spalla-title overlay needs adjustment for dark backgrounds. */
+.dw-dark .spalla-title a { color: #fff; }
+.dw-dark .spalla-title a:hover { color: var(--dw-color-accent); }
+
+/* ============================================================
+   ROS-66 — Dark mode override for editorial-meta-zone (author card)
+   Il parent theme (V7.1) forza questo blocco a chiaro con !important
+   (background #f8fafc, testo scuro) senza alcuna consapevolezza del
+   dark mode del child theme: risultato, card bianca illeggibile su
+   sfondo scuro. Qui si reistituisce l'aspetto scuro del design
+   originale del parent (var(--bg-header)) quando .dw-dark è attivo.
+   ============================================================ */
+.dw-dark .editorial-meta-zone {
+	background: var(--dw-color-primary) !important;
+	border: 1px solid rgba(255, 255, 255, 0.12) !important;
+	box-shadow: none !important;
+	color: rgba(255, 255, 255, 0.85) !important;
+}
+.dw-dark .emz-author {
+	color: rgba(255, 255, 255, 0.85) !important;
+}
+.dw-dark .aeb-avatar {
+	border-color: rgba(255, 255, 255, 0.2) !important;
+}
+.dw-dark .aeb-name {
+	color: #ffffff !important;
+}
+.dw-dark .aeb-role {
+	color: rgba(255, 255, 255, 0.6) !important;
+}
+.dw-dark .aeb-badge {
+	background: rgba(255, 255, 255, 0.08) !important;
+	color: rgba(255, 255, 255, 0.65) !important;
+	border: 1px solid rgba(255, 255, 255, 0.15) !important;
+}
+.dw-dark .aeb-stats .aeb-stat {
+	color: rgba(255, 255, 255, 0.6) !important;
+}
+.dw-dark .aeb-stat strong {
+	color: #ffffff !important;
+}
+.dw-dark .aeb-link {
+	color: var(--dw-color-accent) !important;
+}
+.dw-dark .aeb-link:hover {
+	color: var(--dw-color-accent-dark) !important;
+}
+.dw-dark .editorial-meta-zone .category-grid-card {
+	background: rgba(255, 255, 255, 0.07) !important;
+	border-color: rgba(255, 255, 255, 0.12) !important;
+	color: rgba(255, 255, 255, 0.75) !important;
+}
+.dw-dark .editorial-meta-zone .category-grid-card:hover {
+	background: #ffffff !important;
+	border-color: transparent !important;
+	color: var(--dw-color-primary) !important;
+}
+.dw-dark .cgc-icon,
+.dw-dark .cgc-name {
+	color: rgba(255, 255, 255, 0.85) !important;
+}
+.dw-dark .cgc-count {
+	color: rgba(255, 255, 255, 0.5) !important;
+	background: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ==========================================================================
+   ROS-537 — controparti .dw-dark per i colori hardcoded del parent
+   Il tema padre (style.min.css) ha due blocchi @media (prefers-color-scheme:dark)
+   che non si attivano col toggle .dw-dark su sistema light. I selettori con
+   colori hardcoded (#0f172a, #64748b, #cbd5e1, #fff) nelle regole base restano
+   illeggibili su sfondo scuro. Qui aggiungo le controparti .dw-dark usando i
+   token del child theme (--dw-color-*, var(--text-*), var(--bg-*)) invece di
+   ricopiare gli hex del parent. Esclusi: .lead-cat/.spalla-cat/.lead-bar ecc.
+   già coperti in blocchi precedenti (ROS-61/ROS-66/ROS-77).
+   ========================================================================== */
+/* News edition widget — .ne-live "LIVE" rosso, .ne-date con punto separatore */
+.dw-dark .news-edition {
+	color: var(--text-secondary);
+}
+.dw-dark .news-edition .ne-live {
+	color: var(--text-header);
+}
+.dw-dark .news-edition .ne-date::before {
+	color: var(--text-muted);
+}
+
+/* Section subtitle — usato in varie sezioni come etichetta secondaria */
+.dw-dark .section-subtitle {
+	color: var(--text-secondary);
+}
+
+/* Story meta elements — data, tempo di lettura, autore nelle card articoli */
+.dw-dark .story-meta {
+	color: var(--text-secondary);
+}
+.dw-dark .story-reading-time {
+	color: var(--text-secondary);
+}
+
+/* Footer elements */
+.dw-dark .footer-bottom {
+	color: var(--text-secondary);
+}
+.dw-dark .site-footer .author-label {
+	color: var(--text-secondary);
+}
+.dw-dark .site-footer .post-count {
+	color: var(--text-muted);
+}
+
+/* Lead/spalla bar separators — i punti tra gli elementi */
+.dw-dark .lead-bar > * + *::before {
+	color: var(--text-muted);
+}
+.dw-dark .spalla-bar > * + *::before {
+	color: var(--text-muted);
+}
+
+/* ==========================================================================
+   ROS-33 §5.3  Accessibilità — focus visibile su ogni elemento interattivo.
+   Outline 2px accent + offset 2px su link nav (desktop), toggle/nav/btn e
+   card interattive della homepage. Il parent (assets/css/style.css) non
+   dichiara :focus-visible sulla nav: qui lo rendiamo esplicito su tutti i
+   target interattivi del child senza alterare lo stato hover.
+   ========================================================================== */
+.nav-list li a:focus-visible,
+.mobile-nav-list li a:focus-visible,
+.dw-cat-nav-toggle:focus-visible,
+.et_pb_button:focus-visible,
+.dw-btn:focus-visible,
+.dw-services-cta-card:focus-visible,
+.category-grid-card:focus-visible,
+.lead-cta:focus-visible,
+.section-header-link:focus-visible,
+.pagination-modern a:focus-visible,
+.footer-col a:focus-visible {
+	outline: 2px solid var(--dw-color-accent);
+	outline-offset: 2px;
+}
+
+/* ==========================================================================
+   ROS-33 §5.7 Riduzione movimento — disattiva micro-interazioni (hover card,
+   sticky header blur, pulse) per utenti con preferenza di ridotto movimento.
+   Il parent ne copre solo il punto della news edition (.ne-dot); qui si
+   estende a tutte le transizioni/animazioni aggiunte dal child.
+   ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+	.dw-services-cta-card,
+	.story-card,
+	.dw-category-card,
+	.dw-cat-dropdown-card,
+	.dw-btn,
+	.dw-pb-btn,
+	.lead-cta,
+	.section-header-link {
+		transition: none !important;
+		animation: none !important;
+	}
+	html {
+		scroll-behavior: auto;
+	}
+}
